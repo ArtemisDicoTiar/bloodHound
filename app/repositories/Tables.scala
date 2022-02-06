@@ -1,10 +1,5 @@
 package repositories
 // AUTO-GENERATED Slick data model
-/** Stand-alone Slick data model for immediate use */
-object Tables extends {
-  val profile = slick.jdbc.MySQLProfile
-} with Tables
-
 /** Slick data model trait for extension, choice of backend or usage in the cake pattern. (Make sure to initialize this late.) */
 trait Tables {
   val profile: slick.jdbc.JdbcProfile
@@ -130,8 +125,12 @@ trait Tables {
     /** Database column userId SqlType(INT), AutoInc, PrimaryKey */
     val userid: Rep[Int] = column[Int]("userId", O.AutoInc, O.PrimaryKey)
     /** Database column userName SqlType(VARCHAR), Length(20,true) */
-    val username: Rep[String] = column[String]("userName", O.Length(20,varying=true))
+    val username: Rep[String] = column[String]("userName", O.Length(20, varying = true))
   }
+
   /** Collection-like TableQuery object for table Users */
   lazy val Users = new TableQuery(tag => new Users(tag))
 }
+
+/** Stand-alone Slick data model for immediate use */
+object Tables extends slick.jdbc.MySQLProfile with Tables

@@ -2,12 +2,12 @@ package services
 
 import io.lemonlabs.uri.Url
 import models.{Basket, Price, Product, User}
-import org.joda.time.DateTime
 import repositories.Tables._
 import slick.jdbc.MySQLProfile.api._
 
 import java.sql.Timestamp
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime}
+import java.time.format.DateTimeFormatter
 import scala.concurrent.{ExecutionContext, Future}
 
 class CoupangService(db: Database)(implicit ec: ExecutionContext) {
@@ -17,7 +17,7 @@ class CoupangService(db: Database)(implicit ec: ExecutionContext) {
       .run(
         id match {
           case Some(value) => Products.filter(product => product.prodid === value).result
-          case _ => Products.result
+          case _ => Products.sortBy(_.name.asc).result
         }
       )
       .map(items => items.map(item => Product(item.prodid, item.name, item.url)))
@@ -38,6 +38,12 @@ class CoupangService(db: Database)(implicit ec: ExecutionContext) {
       .map(infos => infos.map(info => User(info.userid, info.username)))
   }
 
+  def getUserById(id: Int): Future[Seq[User]] = {
+    db
+      .run(Users.filter(user => user.userid === id).result)
+      .map(infos => infos.map(info => User(info.userid, info.username)))
+  }
+
   def createUser(name: String): Future[Any] = {
     db.run((Users += UsersRow(-1, name)).asTry).handleDBResponse()
   }
@@ -48,7 +54,13 @@ class CoupangService(db: Database)(implicit ec: ExecutionContext) {
 
   // Prices
   def getPricesByProdId(id: Int): Future[Seq[Price]] = {
-    db.run(Prices.filter(price => price.prodid === id).result)
+    db
+      .run(
+        Prices
+          .filter(price => price.prodid === id)
+          .sortBy(_.datetime.asc)
+          .result
+      )
       .map(infos => infos.map(info => Price(info.prodid, info.datetime, info.price)))
   }
 
@@ -58,13 +70,20 @@ class CoupangService(db: Database)(implicit ec: ExecutionContext) {
   }
 
   def removeDataBeforeDate(date: String): Future[Any] = {
-    val filterDateInTimeStamp = Timestamp.valueOf(DateTime.parse(date).toString())
+    val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+    val localDate = LocalDate.parse(date, dateFormatter)
+    val filterDateInTimeStamp = Timestamp.valueOf(localDate.atStartOfDay())
     db.run(Prices.filter(_.datetime < filterDateInTimeStamp).delete.asTry).handleDBResponse()
   }
 
   // Baskets
   def getBasketByUserId(id: Int): Future[Seq[Basket]] = {
-    db.run(Baskets.filter(basket => basket.userid === id).result)
+    db
+      .run(
+        Baskets
+          .filter(basket => basket.userid === id)
+          .result
+      )
       .map(infos => infos.map(info => Basket(info.userid, info.prodid)))
   }
 
