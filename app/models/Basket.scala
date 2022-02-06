@@ -1,3 +1,3 @@
 package models
 
-case class Basket (userid: String, prodid: Int)
+case class Basket(userid: Int, prodid: Int)

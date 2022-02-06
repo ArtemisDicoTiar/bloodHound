@@ -15,31 +15,36 @@ trait Tables {
 
   /** DDL for all tables. Call .create to execute. */
   lazy val schema: profile.SchemaDescription = Baskets.schema ++ Prices.schema ++ Products.schema ++ Users.schema
+
   @deprecated("Use .schema instead of .ddl", "3.0")
-  def ddl = schema
+  def ddl: profile.DDL = schema
 
   /** Entity class storing rows of table Baskets
-   *  @param userid Database column userId SqlType(VARCHAR), Length(20,true)
-   *  @param prodid Database column prodId SqlType(INT) */
-  case class BasketsRow(userid: String, prodid: Int)
+   *
+   * @param userid Database column userId SqlType(INT)
+   * @param prodid Database column prodId SqlType(INT) */
+  case class BasketsRow(userid: Int, prodid: Int)
+
   /** GetResult implicit for fetching BasketsRow objects using plain SQL queries */
-  implicit def GetResultBasketsRow(implicit e0: GR[String], e1: GR[Int]): GR[BasketsRow] = GR{
-    prs => import prs._
-    BasketsRow.tupled((<<[String], <<[Int]))
+  implicit def GetResultBasketsRow(implicit e0: GR[Int]): GR[BasketsRow] = GR {
+    prs =>
+      import prs._
+      BasketsRow.tupled((<<[Int], <<[Int]))
   }
+
   /** Table description of table baskets. Objects of this class serve as prototypes for rows in queries. */
   class Baskets(_tableTag: Tag) extends profile.api.Table[BasketsRow](_tableTag, Some("coupang"), "baskets") {
     def * = (userid, prodid) <> (BasketsRow.tupled, BasketsRow.unapply)
-    /** Maps whole row to an option. Useful for outer joins. */
-    def ? = ((Rep.Some(userid), Rep.Some(prodid))).shaped.<>({r=>import r._; _1.map(_=> BasketsRow.tupled((_1.get, _2.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
-    /** Database column userId SqlType(VARCHAR), Length(20,true) */
-    val userid: Rep[String] = column[String]("userId", O.Length(20,varying=true))
+    /** Foreign key referencing Products (database name productId) */
+    lazy val productsFk = foreignKey("productId", prodid, Products)(r => r.prodid, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Restrict)
+    /** Database column userId SqlType(INT) */
+    val userid: Rep[Int] = column[Int]("userId")
     /** Database column prodId SqlType(INT) */
     val prodid: Rep[Int] = column[Int]("prodId")
 
-    /** Foreign key referencing Products (database name productId) */
-    lazy val productsFk = foreignKey("productId", prodid, Products)(r => r.prodid, onUpdate=ForeignKeyAction.Restrict, onDelete=ForeignKeyAction.Restrict)
+    /** Maps whole row to an option. Useful for outer joins. */
+    def ? = (Rep.Some(userid), Rep.Some(prodid)).shaped.<>({ r => import r._; _1.map(_ => BasketsRow.tupled((_1.get, _2.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
   }
   /** Collection-like TableQuery object for table Baskets */
   lazy val Baskets = new TableQuery(tag => new Baskets(tag))
@@ -57,8 +62,9 @@ trait Tables {
   /** Table description of table prices. Objects of this class serve as prototypes for rows in queries. */
   class Prices(_tableTag: Tag) extends profile.api.Table[PricesRow](_tableTag, Some("coupang"), "prices") {
     def * = (prodid, datetime, price) <> (PricesRow.tupled, PricesRow.unapply)
+
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = ((Rep.Some(prodid), Rep.Some(datetime), Rep.Some(price))).shaped.<>({r=>import r._; _1.map(_=> PricesRow.tupled((_1.get, _2.get, _3.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(prodid), Rep.Some(datetime), Rep.Some(price)).shaped.<>({ r => import r._; _1.map(_ => PricesRow.tupled((_1.get, _2.get, _3.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column prodId SqlType(INT) */
     val prodid: Rep[Int] = column[Int]("prodId")
@@ -86,8 +92,9 @@ trait Tables {
   /** Table description of table products. Objects of this class serve as prototypes for rows in queries. */
   class Products(_tableTag: Tag) extends profile.api.Table[ProductsRow](_tableTag, Some("coupang"), "products") {
     def * = (prodid, name, url) <> (ProductsRow.tupled, ProductsRow.unapply)
+
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = ((Rep.Some(prodid), Rep.Some(name), Rep.Some(url))).shaped.<>({r=>import r._; _1.map(_=> ProductsRow.tupled((_1.get, _2.get, _3.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(prodid), Rep.Some(name), Rep.Some(url)).shaped.<>({ r => import r._; _1.map(_ => ProductsRow.tupled((_1.get, _2.get, _3.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column prodId SqlType(INT), AutoInc, PrimaryKey */
     val prodid: Rep[Int] = column[Int]("prodId", O.AutoInc, O.PrimaryKey)
@@ -116,8 +123,9 @@ trait Tables {
   /** Table description of table users. Objects of this class serve as prototypes for rows in queries. */
   class Users(_tableTag: Tag) extends profile.api.Table[UsersRow](_tableTag, Some("coupang"), "users") {
     def * = (userid, username) <> (UsersRow.tupled, UsersRow.unapply)
+
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = ((Rep.Some(userid), Rep.Some(username))).shaped.<>({r=>import r._; _1.map(_=> UsersRow.tupled((_1.get, _2.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(userid), Rep.Some(username)).shaped.<>({ r => import r._; _1.map(_ => UsersRow.tupled((_1.get, _2.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column userId SqlType(INT), AutoInc, PrimaryKey */
     val userid: Rep[Int] = column[Int]("userId", O.AutoInc, O.PrimaryKey)
