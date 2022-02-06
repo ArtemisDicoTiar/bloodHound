@@ -1,0 +1,57 @@
+plugins {
+    // See Gradle Play Plugin docs:
+    // https://gradle.github.io/playframework/
+    id 'org.gradle.playframework' version '0.12'
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url 'https://repo.lightbend.com/pass/jwGlH6GsKx6RmMzBkO0JTNspWsLVDdzfb_UfH--rKsV3nFIe/commercial-releases' }
+}
+
+// Gradle Play Plugin only supports Play 2.4.x, 2.5.x, and 2.6.x versions.
+def PlayVersion = "2.8.13"
+
+play {
+    platform {
+        playVersion = PlayVersion
+        scalaVersion = '2.13'
+        javaVersion = JavaVersion.VERSION_1_8
+    }
+    injectedRoutesGenerator = true
+}
+
+// Add the agent to a separated configuration, so it doesn't add to the normal class path
+configurations {
+    agent
+}
+
+dependencies {
+    implementation "com.typesafe.play:play-guice_2.13:$PlayVersion"
+    implementation "com.typesafe.play:play-ahc-ws_2.13:$PlayVersion"
+
+    // Lightbend Telemetry (Cinnamon) agent
+    agent group: 'com.lightbend.cinnamon', name: 'cinnamon-agent', version: '2.16.2'
+
+    // Add the Lightbend Telemetry (Cinnamon) modules you want to use here below.
+    implementation "com.lightbend.cinnamon:cinnamon-play_2.13:2.16.2"
+    implementation "com.lightbend.cinnamon:cinnamon-chmetrics:2.16.2"
+
+    // db
+    implementation "mysql:mysql-connector-java:8.0.25"
+    implementation group: "com.typesafe.play", name: "play-slick_2.13", version: "5.0.0"
+    implementation group: 'com.typesafe.slick', name: 'slick-codegen_2.13', version: '3.3.3'
+
+    // uri
+     implementation group: "io.lemonlabs", name: "scala-uri_2.13", version: "3.6.0"
+//    implementation group: 'com.netaporter', name: 'scala-uri_2.12', version: '0.4.16'
+
+}
+
+tasks.withType(CreateStartScripts) {
+    defaultJvmOpts = ["-javaagent:${configurations.agent.singleFile}"]
+}
+
+group 'org.john'
+version '0.1-SNAPSHOT'

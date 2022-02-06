@@ -1,0 +1,9 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+GET         /v1/coupang/prod        controllers.CoupangController.getProduct(id: Option[Int])
+POST        /v1/coupang/prod        controllers.CoupangController.createProduct(name: String, url: String)
+DELETE      /v1/coupang/prod        controllers.CoupangController.removeProduct(id: Int)
+
+GET         /v1/coupang/user        controllers.CoupangController.getUserByName(name: String)
