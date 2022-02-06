@@ -110,5 +110,5 @@ server.pid
 ### custom
 .gradle
 .idea
-build
-gradle
+PrimalHowl/build
+PrimalHowl/gradle
